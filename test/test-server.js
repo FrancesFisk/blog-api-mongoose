@@ -54,7 +54,7 @@ describe('Blog Posts', function() {
         expect(res.body.length).to.be.at.least(1);
         // each item should be an object with key/value pairs
         // for `id`, `name` and `checked`.
-        const expectedKeys = ['id', 'title', 'content', 'author'];
+        const expectedKeys = ['id', 'title', 'content', 'author', 'publishDate'];
         res.body.forEach(function(item) {
           expect(item).to.be.a('object');
           expect(item).to.include.keys(expectedKeys);
@@ -67,7 +67,15 @@ describe('Blog Posts', function() {
   //  2. inspect response object and prove it has right
   //  status code and that the returned object has an `id`
   it('should add a blog post on POST', function() {
-    const newBlogPost = {title: 'Node.js in a nutshell', content: 'Node is a JavaSCript runtime built on Chrome\'s v8 JavaScript engine.', author: 'Jane Dow'};
+    const newBlogPost = {
+        title: 'Node.js in a nutshell', 
+        content: 'Lorem ipsum hey hey hey', 
+        author: 'Jane Dow'
+    };
+
+    //What is expectedKeys doing??
+    const expectedKeys = ['id', 'publishDate'].concat(Object.keys(newBlogPost));
+
     return chai.request(app)
       .post('/blog-posts')
       .send(newBlogPost)
@@ -75,13 +83,22 @@ describe('Blog Posts', function() {
         expect(res).to.have.status(201);
         expect(res).to.be.json;
         expect(res.body).to.be.a('object');
-        expect(res.body).to.include.keys('id', 'title', 'content', 'author');
-        expect(res.body.id).to.not.equal(null);
-        // response should be deep equal to `newBlogPost` from above if we assign
-        // `id` to it from `res.body.id`
-        expect(res.body).to.deep.equal(Object.assign(newBlogPost, {id: res.body.id}));
+        expect(res.body).to.have.all.keys(expectedKeys);
+        expect(res.body.title).to.equal(newBlogPost.title);
+        expect(res.body.content).to.equal(newBlogPost.content);
+        expect(res.body.author).to.equal(newBlogPost.author)
       });
   });
+
+    it('should error if POST missing expected values', function() {
+        const badRequestData = {};
+        return chai.request(app)
+            .post('/blog-posts')
+            .send(badRequestData)
+            .catch(function(res) {
+                expect(res).to.have.status(400);
+            });
+    });
 
   // test strategy:
   //  1. initialize some update data (we won't have an `id` yet)
@@ -92,45 +109,29 @@ describe('Blog Posts', function() {
   //  has right status code and that we get back an updated
   //  item with the right data in it.
   it('should update blog posts on PUT', function() {
-    // we initialize our updateData here and then after the initial
-    // request to the app, we update it with an `id` property so
-    // we can make a second, PUT call to the app.
-    const updateData = {
-      name: 'foo',
-      checked: true
-    };
-
     return chai.request(app)
-      // first have to get so we have an idea of object to update
-      .get('/blog-posts')
-      .then(function(res) {
-        updateData.id = res.body[0].id;
-        // this will return a promise whose value will be the response
-        // object, which we can inspect in the next `then` block. Note
-        // that we could have used a nested callback here instead of
-        // returning a promise and chaining with `then`, but we find
-        // this approach cleaner and easier to read and reason about.
-        return chai.request(app)
-          .put(`/blog-posts/${updateData.id}`)
-          .send(updateData);
-      })
-      // prove that the PUT request has right status code
-      // and returns updated item
-      .then(function(res) {
-        expect(res).to.have.status(200);
-        expect(res).to.be.json;
-        expect(res.body).to.be.a('object');
-        expect(res.body).to.deep.equal(updateData);
-      });
+        .get('/blog-posts')
+        .then(function(res) {
+            const updatedPost = Object.assign(res.body[0], {
+                title: 'How to Node.js',
+                content: 'lorem ipsum ho ho ho'
+            });
+            return chai.request(app)
+                .put(`/blog-posts/${res.body[0].id}`)
+                .send(updatedPost)
+                .then(function(res) {
+                    expect(res).to.have.status(204);
+                });
+        });
   });
 
   // test strategy:
   //  1. GET blog posts so we can get ID of one
   //  to delete.
-  //  2. DELETE an item and ensure we get back a status 204
+  //  2. DELETE a blog post and ensure we get back a status 204
   it('should delete blog posts on DELETE', function() {
     return chai.request(app)
-      // first have to get so we have an `id` of item
+      // first have to get so we have an `id` of blog post
       // to delete
       .get('/blog-posts')
       .then(function(res) {

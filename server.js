@@ -11,17 +11,6 @@ const blogPostsRouter = require('./blogPostsRouter');
 
 app.use(morgan('common'));
 
-// Where is public?
-app.use(express.static('public'));
-
-
-// sends a response back to the client, which includes the HTML file needed to load the page. That index.html file also points to the static assets found in the public folder
-app.get('/', (req, res)=> {
-    // Where did this endpoint come from?
-    res.sendFile(__dirname + '/views/index.html');
-});
-
-
 app.use('/blog-posts', blogPostsRouter);
 
 
@@ -34,7 +23,7 @@ let server;
 // In our test code, we need a way of asynchronously starting
 // our server, since we'll be dealing with promises there.
 function runServer() {
-  const port = process.env.PORT || 8085;
+  const port = process.env.PORT || 8086;
   return new Promise((resolve, reject) => {
     server = app.listen(port, () => {
       console.log(`Your app is listening on port ${port}`);
