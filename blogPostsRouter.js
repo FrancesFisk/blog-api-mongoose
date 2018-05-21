@@ -2,13 +2,21 @@ const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
 const jsonParser = bodyParser.json();
+// are these necessary?
+const mongoose = require('mongoose');
+mongoose.Promise = global.Promise;
 
-const {BlogPosts} = require('./models');
-
-BlogPosts.create("How to learn code", "This is how you learn code. First, you learn it. Then, you do it", "Jane Doe");
+const {BlogPost} = require('./models');
 
 router.get('/', (req, res) => {
-    res.json(BlogPosts.get());
+    BlogPost
+        .find() 
+        .then(posts => {
+            res.status(200).send(posts);
+        })
+        .catch(err => {
+            res.status(500).send("there was an error");
+        })
 });
 
 router.post('/', jsonParser, (req, res) => {
