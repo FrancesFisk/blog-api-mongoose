@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const bodyParser = require('body-parser');
-const jsonParser = bodyParser.json();
 // are these necessary?
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
@@ -27,12 +26,13 @@ router.get('/:id', (req, res) => {
         .then(post => res.json(post.serialize()))
         .catch(err => {
             console.error(err);
-            res.status(500).json({error: 'somethign went horribly awry'});
+            res.status(500).json({error: 'something went horribly awry'});
         });
 });
 
 // Create new blog posts
 router.post('/', (req, res) => {
+    console.log(req.body);
     const requiredFields = ['title', 'content', 'author'];
     for (let i = 0; i < requiredFields.length; i++) {
         const field = requiredFields[i];
@@ -42,7 +42,6 @@ router.post('/', (req, res) => {
             return res.status(400).send(message);
         }
     }
-
     BlogPost
         .create({
             title: req.body.title,
@@ -80,8 +79,16 @@ router.put('/:id', (req, res) => {
 });
 
 // Delete a post with a given id
-router.delete('/', (req, res) => {
-    res.status(404).json({message: 'Not Found'});
+router.delete('/:id', (req, res) => {
+    BlogPost
+        .findByIdAndRemove(req.params.id)
+        .then(() => {
+        res.status(204).json({message: 'Delete was successful'})
+        })
+        .catch(err => {
+            res.status(500).json({message: 'ID not found'})
+        });
 });
+
 
 module.exports = router;

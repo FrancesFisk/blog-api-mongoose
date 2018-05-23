@@ -16,7 +16,9 @@ const app = express();
 const blogPostsRouter = require('./blogPostsRouter');
 
 app.use(morgan('common'));
-
+app.use(express.json());
+// app.use(bodyParser.urlencoded({ extended: true })); 
+// app.use(bodyParser.json())
 app.use('/blog-posts', blogPostsRouter);
 
 
